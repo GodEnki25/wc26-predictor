@@ -2,10 +2,12 @@ import { GROUPS } from '../data/groups'
 
 type Team = { name: string; flag: string }
 type Rankings = Record<string, string[]>
+type ThirdPlaceTeam = { name: string; flag: string; groupId: string }
 
 interface Props {
   champion: Team
   rankings: Rankings
+  thirdPlaceTeams: ThirdPlaceTeam[]
 }
 
 const C = {
