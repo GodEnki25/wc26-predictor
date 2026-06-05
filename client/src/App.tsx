@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import GroupsPage from './pages/GroupsPage'
+import BracketPage from './pages/BracketPage'
 
 type Rankings = Record<string, string[]>
+
+const C = {
+  bg: '#0e0416',
+  red: '#c8102e',
+  lime: '#c8f000',
+  purple: '#6b21a8',
+}
 
 export default function App() {
   const [tab, setTab] = useState<'groups' | 'bracket' | 'summary'>('groups')
@@ -13,44 +21,41 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0e0416]">
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#c8102e]">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="font-black text-white text-lg tracking-wider">
-            ⚽ <span className="text-[#c8f000]">WC26</span> PREDICTOR
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: C.red }}>
+        <div style={{
+          maxWidth: 1280, margin: '0 auto',
+          padding: '0 24px', height: 56,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div style={{ fontWeight: 900, color: '#fff', fontSize: 18, letterSpacing: '0.06em' }}>
+            ⚽ <span style={{ color: C.lime }}>WC26</span> PREDICTOR
           </div>
-          <nav className="flex gap-1">
+          <nav style={{ display: 'flex', gap: 4 }}>
             {(['groups', 'bracket', 'summary'] as const).map((t, i) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-4 py-1.5 rounded text-xs font-bold tracking-wider uppercase transition-colors
-                  ${tab === t
-                    ? 'bg-black/25 text-white'
-                    : 'text-white/40 hover:text-white/70'
-                  }`}
-              >
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: '6px 14px', borderRadius: 6, border: 'none',
+                fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                cursor: 'pointer',
+                background: tab === t ? 'rgba(0,0,0,0.25)' : 'transparent',
+                color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)',
+              }}>
                 {i + 1}. {t}
               </button>
             ))}
           </nav>
         </div>
-        {/* Gradient stripe */}
-        <div className="h-[3px]" style={{
-          background: 'linear-gradient(90deg, #c8102e 0%, #6b21a8 50%, #c8f000 100%)'
+        <div style={{
+          height: 3,
+          background: `linear-gradient(90deg, ${C.red} 0%, ${C.purple} 50%, ${C.lime} 100%)`
         }} />
       </header>
 
       {tab === 'groups' && <GroupsPage onComplete={handleGroupsComplete} />}
-      {tab === 'bracket' && (
-        <div className="p-10 text-white/30 text-center text-sm">
-          Bracket coming next...
-        </div>
-      )}
+      {tab === 'bracket' && <BracketPage rankings={rankings} onComplete={handleGroupsComplete} />}
       {tab === 'summary' && (
-        <div className="p-10 text-white/30 text-center text-sm">
+        <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
           Summary coming next...
         </div>
       )}
