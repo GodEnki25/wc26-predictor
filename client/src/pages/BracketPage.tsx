@@ -3,9 +3,11 @@ import { GROUPS } from '../data/groups'
 
 type Team = { name: string; flag: string }
 type Rankings = Record<string, string[]>
+type ThirdPlaceTeam = { name: string; flag: string; groupId: string }
 
 interface Props {
   rankings: Rankings
+  thirdPlaceTeams: ThirdPlaceTeam[]
   onComplete: (winner: Team) => void
 }
 
@@ -143,7 +145,7 @@ function RoundColumn({
   )
 }
 
-export default function BracketPage({ rankings, onComplete }: Props) {
+export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: Props) {
   const [winners, setWinners] = useState<Record<string, Team>>({})
 
   const pickWinner = (matchId: string, team: Team) => {
@@ -153,7 +155,7 @@ export default function BracketPage({ rankings, onComplete }: Props) {
   // Build all 32 teams
   const advancing = getAdvancing(rankings)
   const thirdPlace = getThirdPlace(rankings)
-  const allTeams = [...advancing, ...thirdPlace].slice(0, 32)
+  const allTeams = [...advancing, ...thirdPlace, ...thirdPlaceTeams].slice(0, 32)
 
   // Round of 32 — 16 matches
   const r32 = Array.from({ length: 16 }, (_, i) => ({

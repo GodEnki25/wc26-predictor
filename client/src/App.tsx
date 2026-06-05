@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import GroupsPage from './pages/GroupsPage'
+import ThirdPlacePage from './pages/ThirdPlacePage'
 import BracketPage from './pages/BracketPage'
 import SummaryPage from './pages/SummaryPage'
 
 type Rankings = Record<string, string[]>
 type Team = { name: string; flag: string }
+type ThirdPlaceTeam = { name: string; flag: string; groupId: string }
 
 const C = {
   bg: '#0e0416',
@@ -15,12 +17,18 @@ const C = {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<'groups' | 'bracket' | 'summary'>('groups')
+  const [tab, setTab] = useState<'groups' | 'thirdplace' | 'bracket' | 'summary'>('groups')
   const [rankings, setRankings] = useState<Rankings>({})
+  const [thirdPlaceTeams, setThirdPlaceTeams] = useState<ThirdPlaceTeam[]>([])
   const [champion, setChampion] = useState<Team | null>(null)
 
   const handleGroupsComplete = (r: Rankings) => {
     setRankings(r)
+    setTab('thirdplace')
+  }
+
+  const handleThirdPlaceComplete = (teams: ThirdPlaceTeam[]) => {
+    setThirdPlaceTeams(teams)
     setTab('bracket')
   }
 
@@ -28,6 +36,13 @@ export default function App() {
     setChampion(winner)
     setTab('summary')
   }
+
+  const navItems = [
+    { id: 'groups', label: 'Groups', n: 1 },
+    { id: 'thirdplace', label: '3rd Place', n: 2 },
+    { id: 'bracket', label: 'Bracket', n: 3 },
+    { id: 'summary', label: 'Summary', n: 4 },
+  ] as const
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
@@ -43,16 +58,16 @@ export default function App() {
             ⚽ <span style={{ color: C.lime }}>WC26</span> PREDICTOR
           </div>
           <nav style={{ display: 'flex', gap: 4 }}>
-            {(['groups', 'bracket', 'summary'] as const).map((t, i) => (
-              <button key={t} onClick={() => setTab(t)} style={{
-                padding: '6px 14px', borderRadius: 6, border: 'none',
+            {navItems.map(({ id, label, n }) => (
+              <button key={id} onClick={() => setTab(id)} style={{
+                padding: '6px 12px', borderRadius: 6, border: 'none',
                 fontSize: 11, fontWeight: 700,
                 letterSpacing: '0.08em', textTransform: 'uppercase',
                 cursor: 'pointer',
-                background: tab === t ? 'rgba(0,0,0,0.25)' : 'transparent',
-                color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)',
+                background: tab === id ? 'rgba(0,0,0,0.25)' : 'transparent',
+                color: tab === id ? '#fff' : 'rgba(255,255,255,0.4)',
               }}>
-                {i + 1}. {t}
+                {n}. {label}
               </button>
             ))}
           </nav>
@@ -63,23 +78,33 @@ export default function App() {
         }} />
       </header>
 
-      {tab === 'groups' && <GroupsPage onComplete={handleGroupsComplete} />}
-      {tab === 'bracket' && <BracketPage rankings={rankings} onComplete={handleBracketComplete} />}
-      {tab === 'summary' && champion && <SummaryPage champion={champion} rankings={rankings} />}
+      {tab === 'groups' && (
+        <GroupsPage onComplete={handleGroupsComplete} />
+      )}
+      {tab === 'thirdplace' && (
+        <ThirdPlacePage rankings={rankings} onComplete={handleThirdPlaceComplete} />
+      )}
+      {tab === 'bracket' && (
+        <BracketPage
+          rankings={rankings}
+          thirdPlaceTeams={thirdPlaceTeams}
+          onComplete={handleBracketComplete}
+        />
+      )}
+      {tab === 'summary' && champion && (
+        <SummaryPage champion={champion} rankings={rankings} thirdPlaceTeams={thirdPlaceTeams} />
+      )}
       {tab === 'summary' && !champion && (
         <div style={{ padding: 40, textAlign: 'center' }}>
           <p style={{ color: C.white20, fontSize: 14, marginBottom: 16 }}>
             Complete the bracket first to see your summary.
           </p>
-          <button
-            onClick={() => setTab('groups')}
-            style={{
-              padding: '12px 32px', borderRadius: 8, border: 'none',
-              background: `linear-gradient(135deg, ${C.red}, ${C.purple})`,
-              color: '#fff', fontWeight: 900, fontSize: 13,
-              letterSpacing: '0.08em', cursor: 'pointer',
-            }}
-          >
+          <button onClick={() => setTab('groups')} style={{
+            padding: '12px 32px', borderRadius: 8, border: 'none',
+            background: `linear-gradient(135deg, ${C.red}, ${C.purple})`,
+            color: '#fff', fontWeight: 900, fontSize: 13,
+            letterSpacing: '0.08em', cursor: 'pointer',
+          }}>
             START FROM GROUPS →
           </button>
         </div>
