@@ -39,7 +39,11 @@ function assignThirdPlaceTeams(
 ): Record<string, Team | null> {
   const result: Record<string, Team | null> = {}
   const used = new Set<string>()
-  for (const slot of slots) {
+
+  // Sort slots by how many teams can fill them — most restrictive first
+  const sorted = [...slots].sort((a, b) => a.fromGroups.length - b.fromGroups.length)
+
+  for (const slot of sorted) {
     const match = thirdPlaceTeams.find(
       t => slot.fromGroups.includes(t.groupId) && !used.has(t.name)
     )
