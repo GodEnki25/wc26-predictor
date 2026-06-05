@@ -33,9 +33,24 @@ function getTeam(rankings: Rankings, groupId: string, position: number): Team | 
   return team ? { name: team.name, flag: team.flag } : null
 }
 
-function getBestThird(thirdPlaceTeams: ThirdPlaceTeam[], fromGroups: string[]): Team | null {
-  const match = thirdPlaceTeams.find(t => fromGroups.includes(t.groupId))
-  return match ? { name: match.name, flag: match.flag } : null
+function assignThirdPlaceTeams(
+  thirdPlaceTeams: ThirdPlaceTeam[],
+  slots: { id: string; fromGroups: string[] }[]
+): Record<string, Team | null> {
+  const result: Record<string, Team | null> = {}
+  const used = new Set<string>()
+  for (const slot of slots) {
+    const match = thirdPlaceTeams.find(
+      t => slot.fromGroups.includes(t.groupId) && !used.has(t.name)
+    )
+    if (match) {
+      result[slot.id] = { name: match.name, flag: match.flag }
+      used.add(match.name)
+    } else {
+      result[slot.id] = null
+    }
+  }
+  return result
 }
 
 function TeamRow({ team, isWinner, hasWinner, onPick }: {
@@ -120,28 +135,41 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
     setWinners(prev => ({ ...prev, [matchId]: team }))
   }
 
-  // ── LEFT SIDE R32 (official FIFA) ─────────────────────────────────────────
+  // Assign third place teams once — no duplicates
+  const thirdSlots = [
+    { id: 'l32-1', fromGroups: ['A','B','C','D','F'] },
+    { id: 'l32-2', fromGroups: ['C','D','F','G','H'] },
+    { id: 'l32-7', fromGroups: ['B','E','F','I','J'] },
+    { id: 'l32-8', fromGroups: ['A','E','H','I','J'] },
+    { id: 'r32-3', fromGroups: ['C','E','F','H','I'] },
+    { id: 'r32-4', fromGroups: ['E','H','I','J','K'] },
+    { id: 'r32-7', fromGroups: ['E','F','G','I','J'] },
+    { id: 'r32-8', fromGroups: ['D','E','I','J','L'] },
+  ]
+  const thirdAssigned = assignThirdPlaceTeams(thirdPlaceTeams, thirdSlots)
+
+  // ── LEFT SIDE R32 ─────────────────────────────────────────────────────────
   const leftR32 = [
-    { id: 'l32-1', label: '1E vs 3ABCDF', team1: getTeam(rankings,'E',0), team2: getBestThird(thirdPlaceTeams,['A','B','C','D','F']) },
-    { id: 'l32-2', label: '1I vs 3CDFGH', team1: getTeam(rankings,'I',0), team2: getBestThird(thirdPlaceTeams,['C','D','F','G','H']) },
+    { id: 'l32-1', label: '1E vs 3ABCDF', team1: getTeam(rankings,'E',0), team2: thirdAssigned['l32-1'] },
+    { id: 'l32-2', label: '1I vs 3CDFGH', team1: getTeam(rankings,'I',0), team2: thirdAssigned['l32-2'] },
     { id: 'l32-3', label: '2A vs 2B',     team1: getTeam(rankings,'A',1), team2: getTeam(rankings,'B',1) },
     { id: 'l32-4', label: '1F vs 2C',     team1: getTeam(rankings,'F',0), team2: getTeam(rankings,'C',1) },
     { id: 'l32-5', label: '2K vs 2L',     team1: getTeam(rankings,'K',1), team2: getTeam(rankings,'L',1) },
     { id: 'l32-6', label: '1H vs 2J',     team1: getTeam(rankings,'H',0), team2: getTeam(rankings,'J',1) },
-    { id: 'l32-7', label: '1D vs 3BEFIJ', team1: getTeam(rankings,'D',0), team2: getBestThird(thirdPlaceTeams,['B','E','F','I','J']) },
-    { id: 'l32-8', label: '1G vs 3AEHIJ', team1: getTeam(rankings,'G',0), team2: getBestThird(thirdPlaceTeams,['A','E','H','I','J']) },
+    { id: 'l32-7', label: '1D vs 3BEFIJ', team1: getTeam(rankings,'D',0), team2: thirdAssigned['l32-7'] },
+    { id: 'l32-8', label: '1G vs 3AEHIJ', team1: getTeam(rankings,'G',0), team2: thirdAssigned['l32-8'] },
   ]
 
-  // ── RIGHT SIDE R32 (official FIFA) ───────────────────────────────────────
+  // ── RIGHT SIDE R32 ────────────────────────────────────────────────────────
   const rightR32 = [
     { id: 'r32-1', label: '1C vs 2F',     team1: getTeam(rankings,'C',0), team2: getTeam(rankings,'F',1) },
     { id: 'r32-2', label: '2E vs 2I',     team1: getTeam(rankings,'E',1), team2: getTeam(rankings,'I',1) },
-    { id: 'r32-3', label: '1A vs 3CEFHI', team1: getTeam(rankings,'A',0), team2: getBestThird(thirdPlaceTeams,['C','E','F','H','I']) },
-    { id: 'r32-4', label: '1L vs 3EHIJK', team1: getTeam(rankings,'L',0), team2: getBestThird(thirdPlaceTeams,['E','H','I','J','K']) },
+    { id: 'r32-3', label: '1A vs 3CEFHI', team1: getTeam(rankings,'A',0), team2: thirdAssigned['r32-3'] },
+    { id: 'r32-4', label: '1L vs 3EHIJK', team1: getTeam(rankings,'L',0), team2: thirdAssigned['r32-4'] },
     { id: 'r32-5', label: '1J vs 2H',     team1: getTeam(rankings,'J',0), team2: getTeam(rankings,'H',1) },
     { id: 'r32-6', label: '2D vs 2G',     team1: getTeam(rankings,'D',1), team2: getTeam(rankings,'G',1) },
-    { id: 'r32-7', label: '1B vs 3EFGIJ', team1: getTeam(rankings,'B',0), team2: getBestThird(thirdPlaceTeams,['E','F','G','I','J']) },
-    { id: 'r32-8', label: '1K vs 3DEIJL', team1: getTeam(rankings,'K',0), team2: getBestThird(thirdPlaceTeams,['D','E','I','J','L']) },
+    { id: 'r32-7', label: '1B vs 3EFGIJ', team1: getTeam(rankings,'B',0), team2: thirdAssigned['r32-7'] },
+    { id: 'r32-8', label: '1K vs 3DEIJL', team1: getTeam(rankings,'K',0), team2: thirdAssigned['r32-8'] },
   ]
 
   // ── LEFT R16 ──────────────────────────────────────────────────────────────
@@ -172,14 +200,12 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
     team2: winners[rightR16[i * 2 + 1].id] || null,
   }))
 
-  // ── LEFT SF ───────────────────────────────────────────────────────────────
+  // ── SEMI FINALS ───────────────────────────────────────────────────────────
   const leftSF = {
     id: 'lsf',
     team1: winners['lqf-0'] || null,
     team2: winners['lqf-1'] || null,
   }
-
-  // ── RIGHT SF ──────────────────────────────────────────────────────────────
   const rightSF = {
     id: 'rsf',
     team1: winners['rqf-0'] || null,
@@ -194,11 +220,6 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
   }
 
   const champion = winners['final'] || null
-
-  const colStyle = (width: number) => ({
-    display: 'flex', flexDirection: 'column' as const,
-    minWidth: width, width: width,
-  })
 
   const spacer = (h: number) => <div style={{ height: h }} />
 
@@ -231,12 +252,12 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
         </div>
       )}
 
-      {/* Two-sided bracket */}
+      {/* Bracket */}
       <div style={{ overflowX: 'auto', paddingBottom: 16 }}>
         <div style={{ display: 'flex', gap: 6, minWidth: 1100, alignItems: 'flex-start' }}>
 
-          {/* ── LEFT R32 ── */}
-          <div style={colStyle(135)}>
+          {/* LEFT R32 */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 135 }}>
             <ColHeader title="Round of 32" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {leftR32.map(m => (
@@ -247,40 +268,36 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
             </div>
           </div>
 
-          {/* ── LEFT R16 ── */}
-          <div style={colStyle(130)}>
+          {/* LEFT R16 */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
             <ColHeader title="Round of 16" />
             {spacer(18)}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {leftR16.map((m, i) => (
-                <div key={m.id}>
-                  {i > 0 && spacer(28)}
-                  <MatchCard matchId={m.id} label={`R16-L${i+1}`}
-                    team1={m.team1} team2={m.team2}
-                    winner={winners[m.id] || null} onPick={pick} />
-                </div>
-              ))}
-            </div>
+            {leftR16.map((m, i) => (
+              <div key={m.id}>
+                {i > 0 && spacer(28)}
+                <MatchCard matchId={m.id} label={`R16-L${i+1}`}
+                  team1={m.team1} team2={m.team2}
+                  winner={winners[m.id] || null} onPick={pick} />
+              </div>
+            ))}
           </div>
 
-          {/* ── LEFT QF ── */}
-          <div style={colStyle(130)}>
+          {/* LEFT QF */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
             <ColHeader title="Quarter Finals" />
             {spacer(54)}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {leftQF.map((m, i) => (
-                <div key={m.id}>
-                  {i > 0 && spacer(88)}
-                  <MatchCard matchId={m.id} label={`QF-L${i+1}`}
-                    team1={m.team1} team2={m.team2}
-                    winner={winners[m.id] || null} onPick={pick} />
-                </div>
-              ))}
-            </div>
+            {leftQF.map((m, i) => (
+              <div key={m.id}>
+                {i > 0 && spacer(88)}
+                <MatchCard matchId={m.id} label={`QF-L${i+1}`}
+                  team1={m.team1} team2={m.team2}
+                  winner={winners[m.id] || null} onPick={pick} />
+              </div>
+            ))}
           </div>
 
-          {/* ── LEFT SF ── */}
-          <div style={colStyle(130)}>
+          {/* LEFT SF */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
             <ColHeader title="Semi Final" />
             {spacer(140)}
             <MatchCard matchId={leftSF.id} label="SF Left"
@@ -288,14 +305,11 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
               winner={winners[leftSF.id] || null} onPick={pick} />
           </div>
 
-          {/* ── CENTER / FINAL ── */}
-          <div style={{
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', minWidth: 140,
-          }}>
+          {/* CENTER FINAL */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 140 }}>
             <ColHeader title="⚽ Final" />
             {spacer(260)}
-            <div style={{ fontSize: 36, textAlign: 'center', marginBottom: 8 }}>🏆</div>
+            <div style={{ fontSize: 36, textAlign: 'center', marginBottom: 6 }}>🏆</div>
             <div style={{
               background: C.card,
               border: `2px solid ${champion ? 'rgba(200,240,0,0.5)' : C.border}`,
@@ -314,8 +328,8 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
             </div>
           </div>
 
-          {/* ── RIGHT SF ── */}
-          <div style={colStyle(130)}>
+          {/* RIGHT SF */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
             <ColHeader title="Semi Final" />
             {spacer(140)}
             <MatchCard matchId={rightSF.id} label="SF Right"
@@ -323,40 +337,36 @@ export default function BracketPage({ rankings, thirdPlaceTeams, onComplete }: P
               winner={winners[rightSF.id] || null} onPick={pick} />
           </div>
 
-          {/* ── RIGHT QF ── */}
-          <div style={colStyle(130)}>
+          {/* RIGHT QF */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
             <ColHeader title="Quarter Finals" />
             {spacer(54)}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {rightQF.map((m, i) => (
-                <div key={m.id}>
-                  {i > 0 && spacer(88)}
-                  <MatchCard matchId={m.id} label={`QF-R${i+1}`}
-                    team1={m.team1} team2={m.team2}
-                    winner={winners[m.id] || null} onPick={pick} />
-                </div>
-              ))}
-            </div>
+            {rightQF.map((m, i) => (
+              <div key={m.id}>
+                {i > 0 && spacer(88)}
+                <MatchCard matchId={m.id} label={`QF-R${i+1}`}
+                  team1={m.team1} team2={m.team2}
+                  winner={winners[m.id] || null} onPick={pick} />
+              </div>
+            ))}
           </div>
 
-          {/* ── RIGHT R16 ── */}
-          <div style={colStyle(130)}>
+          {/* RIGHT R16 */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
             <ColHeader title="Round of 16" />
             {spacer(18)}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {rightR16.map((m, i) => (
-                <div key={m.id}>
-                  {i > 0 && spacer(28)}
-                  <MatchCard matchId={m.id} label={`R16-R${i+1}`}
-                    team1={m.team1} team2={m.team2}
-                    winner={winners[m.id] || null} onPick={pick} />
-                </div>
-              ))}
-            </div>
+            {rightR16.map((m, i) => (
+              <div key={m.id}>
+                {i > 0 && spacer(28)}
+                <MatchCard matchId={m.id} label={`R16-R${i+1}`}
+                  team1={m.team1} team2={m.team2}
+                  winner={winners[m.id] || null} onPick={pick} />
+              </div>
+            ))}
           </div>
 
-          {/* ── RIGHT R32 ── */}
-          <div style={colStyle(135)}>
+          {/* RIGHT R32 */}
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 135 }}>
             <ColHeader title="Round of 32" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {rightR32.map(m => (
