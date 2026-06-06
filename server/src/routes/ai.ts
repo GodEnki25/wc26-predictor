@@ -32,6 +32,7 @@ Keep it conversational, exciting, and under 100 words.
     const result = await model.generateContent(prompt)
     res.json({ analysis: result.response.text() })
   } catch (error) {
+    console.error('AI analysis error:', error)
     res.status(500).json({ error: 'Failed to generate analysis' })
   }
 })
@@ -58,6 +59,7 @@ Return pure JSON only.
     const clean = text.replace(/```json|```/g, '').trim()
     res.json(JSON.parse(clean))
   } catch (error) {
+    console.error('AI predictions error:', error)
     res.status(500).json({ error: 'Failed to generate AI predictions' })
   }
 })

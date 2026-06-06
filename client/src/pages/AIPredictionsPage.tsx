@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { analyzeUserPredictions, getAIPredictions } from '../services/gemini'
+import { getAIAnalysis, getAIPredictions } from '../services/api'
 
 type Team = { name: string; flag: string }
 type Rankings = Record<string, string[]>
@@ -32,32 +32,32 @@ export default function AIPredictionsPage({ champion, rankings }: Props) {
   const [error, setError] = useState<string>('')
 
   const fetchAnalysis = async (retries = 2) => {
-    setLoadingAnalysis(true)
-    setError('')
-    try {
-      const result = await analyzeUserPredictions(champion, rankings)
-      setAnalysis(result)
-    } catch (e) {
-      if (retries > 0 && e?.message?.includes('429')) {
-        setTimeout(() => fetchAnalysis(retries - 1), 5000)
-      } else {
-        setError('Aliens are Watching You. Just kidding, Just chill, and try again.')
-      }
+  setLoadingAnalysis(true)
+  setError('')
+  try {
+    const result = await getAIAnalysis(champion, rankings)
+    setAnalysis(result)
+  } catch (e: any) {
+    if (retries > 0) {
+      setTimeout(() => fetchAnalysis(retries - 1), 3000)
+    } else {
+      setError('Failed to get AI analysis. Make sure the server is running.')
     }
-    setLoadingAnalysis(false)
   }
+  setLoadingAnalysis(false)
+}
 
   const fetchAIPicks = async () => {
-    setLoadingAI(true)
-    setError('')
-    try {
-      const result = await getAIPredictions()
-      setAiPicks(result)
-    } catch (e) {
-      setError('Failed to get AI predictions. Please try again.')
-    }
-    setLoadingAI(false)
+  setLoadingAI(true)
+  setError('')
+  try {
+    const result = await getAIPredictions()
+    setAiPicks(result)
+  } catch (e: any) {
+    setError('Failed to get AI predictions. Make sure the server is running.')
   }
+  setLoadingAI(false)
+}
 
   useEffect(() => {
     const timer = setTimeout(() => {
