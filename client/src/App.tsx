@@ -3,6 +3,7 @@ import GroupsPage from './pages/GroupsPage'
 import ThirdPlacePage from './pages/ThirdPlacePage'
 import BracketPage from './pages/BracketPage'
 import SummaryPage from './pages/SummaryPage'
+import AIPredictionsPage from './pages/AIPredictionsPage'
 
 type Rankings = Record<string, string[]>
 type Team = { name: string; flag: string }
@@ -17,7 +18,7 @@ const C = {
 }
 
 export default function App() {
-  const [tab, setTab] = useState<'groups' | 'thirdplace' | 'bracket' | 'summary'>('groups')
+  const [tab, setTab] = useState<'groups' | 'thirdplace' | 'bracket' | 'summary' | 'ai'>('groups')
   const [rankings, setRankings] = useState<Rankings>({})
   const [thirdPlaceTeams, setThirdPlaceTeams] = useState<ThirdPlaceTeam[]>([])
   const [champion, setChampion] = useState<Team | null>(null)
@@ -42,12 +43,11 @@ export default function App() {
     { id: 'thirdplace', label: '3rd Place', n: 2 },
     { id: 'bracket', label: 'Bracket', n: 3 },
     { id: 'summary', label: 'Summary', n: 4 },
+    { id: 'ai', label: '🤖 AI', n: 5 },
   ] as const
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg }}>
-
-      {/* Header */}
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: C.red }}>
         <div style={{
           maxWidth: 1280, margin: '0 auto',
@@ -78,9 +78,7 @@ export default function App() {
         }} />
       </header>
 
-      {tab === 'groups' && (
-        <GroupsPage onComplete={handleGroupsComplete} />
-      )}
+      {tab === 'groups' && <GroupsPage onComplete={handleGroupsComplete} />}
       {tab === 'thirdplace' && (
         <ThirdPlacePage rankings={rankings} onComplete={handleThirdPlaceComplete} />
       )}
@@ -98,6 +96,24 @@ export default function App() {
         <div style={{ padding: 40, textAlign: 'center' }}>
           <p style={{ color: C.white20, fontSize: 14, marginBottom: 16 }}>
             Complete the bracket first to see your summary.
+          </p>
+          <button onClick={() => setTab('groups')} style={{
+            padding: '12px 32px', borderRadius: 8, border: 'none',
+            background: `linear-gradient(135deg, ${C.red}, ${C.purple})`,
+            color: '#fff', fontWeight: 900, fontSize: 13,
+            letterSpacing: '0.08em', cursor: 'pointer',
+          }}>
+            START FROM GROUPS →
+          </button>
+        </div>
+      )}
+      {tab === 'ai' && champion && (
+        <AIPredictionsPage champion={champion} rankings={rankings} />
+      )}
+      {tab === 'ai' && !champion && (
+        <div style={{ padding: 40, textAlign: 'center' }}>
+          <p style={{ color: C.white20, fontSize: 14, marginBottom: 16 }}>
+            Complete your bracket first to get AI analysis.
           </p>
           <button onClick={() => setTab('groups')} style={{
             padding: '12px 32px', borderRadius: 8, border: 'none',
