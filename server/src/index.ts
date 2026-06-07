@@ -11,9 +11,23 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://sorel-wc26-predictor.vercel.app', 'https://sorel-wc26-predictor-sand.vercel.app'],
+  origin: (origin, callback) => {
+    const allowed = [
+      'http://localhost:5173',
+      'https://sorel-wc26-predictor.vercel.app',
+      'https://sorel-wc26-predictor-sand.vercel.app',
+    ]
+    // Allow any Vercel preview deployment for this project
+    if (!origin || allowed.includes(origin) || /https:\/\/wc26-predictor-.*\.vercel\.app/.test(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
   credentials: true,
 }))
+
+
 app.use(express.json())
 
 app.get('/health', (req, res) => {
