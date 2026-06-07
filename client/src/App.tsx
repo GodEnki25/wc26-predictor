@@ -114,60 +114,74 @@ export default function App() {
         />
       )}
 
-      {/* Header */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: C.red }}>
-        <div style={{
-          maxWidth: 1280, margin: '0 auto',
-          padding: '0 24px', height: 56,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+{/* Header */}
+<header style={{ position: 'sticky', top: 0, zIndex: 50, background: C.red }}>
+  <div style={{
+    maxWidth: 1280, margin: '0 auto',
+    padding: '0 12px', height: 56,
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    gap: 8,
+  }}>
+    {/* Logo */}
+    <div style={{ fontWeight: 900, color: '#fff', fontSize: 16, letterSpacing: '0.06em', flexShrink: 0 }}>
+      ⚽ <span style={{ color: C.lime }}>WC26</span>
+    </div>
+
+    {/* Nav tabs — scrollable on mobile */}
+    <nav style={{
+      display: 'flex', gap: 2, alignItems: 'center',
+      overflowX: 'auto', flexShrink: 1,
+      scrollbarWidth: 'none',
+      // hide webkit scrollbar
+      msOverflowStyle: 'none',
+    }}>
+      {navItems.map(({ id, label, n }) => (
+        <button key={id} onClick={() => setTab(id)} style={{
+          padding: '6px 10px', borderRadius: 6, border: 'none',
+          fontSize: 11, fontWeight: 700, flexShrink: 0,
+          letterSpacing: '0.05em', textTransform: 'uppercase',
+          cursor: 'pointer', whiteSpace: 'nowrap',
+          background: tab === id ? 'rgba(0,0,0,0.25)' : 'transparent',
+          color: tab === id ? '#fff' : 'rgba(255,255,255,0.5)',
+          textDecoration: tab === id ? 'underline' : 'none',
+          textUnderlineOffset: 3,
         }}>
-          <div style={{ fontWeight: 900, color: '#fff', fontSize: 18, letterSpacing: '0.06em' }}>
-            ⚽ <span style={{ color: C.lime }}>WC26</span> PREDICTOR
-          </div>
+          {n}. {label}
+        </button>
+      ))}
+    </nav>
 
-          <nav style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            {navItems.map(({ id, label, n }) => (
-              <button key={id} onClick={() => setTab(id)} style={{
-                padding: '6px 12px', borderRadius: 6, border: 'none',
-                fontSize: 11, fontWeight: 700,
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-                cursor: 'pointer',
-                background: tab === id ? 'rgba(0,0,0,0.25)' : 'transparent',
-                color: tab === id ? '#fff' : 'rgba(255,255,255,0.4)',
-              }}>
-                {n}. {label}
-              </button>
-            ))}
-
-            {/* Auth buttons */}
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 8 }}>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>
-                  👋 {user.name}
-                </span>
-                <button onClick={handleLogout} style={{
-                  padding: '5px 10px', borderRadius: 6,
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  background: 'transparent', color: 'rgba(255,255,255,0.5)',
-                  fontSize: 10, fontWeight: 700, cursor: 'pointer',
-                  letterSpacing: '0.08em', textTransform: 'uppercase',
-                }}>Logout</button>
-              </div>
-            ) : (
-              <button onClick={() => setShowAuth(true)} style={{
-                marginLeft: 8, padding: '6px 14px', borderRadius: 6,
-                border: 'none', background: C.lime, color: '#0e0416',
-                fontSize: 11, fontWeight: 900, cursor: 'pointer',
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-              }}>Login</button>
-            )}
-          </nav>
+    {/* Auth — always visible, never shrinks */}
+    <div style={{ flexShrink: 0 }}>
+      {user ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            👋 {user.name}
+          </span>
+          <button onClick={handleLogout} style={{
+            padding: '5px 8px', borderRadius: 6,
+            border: '1px solid rgba(255,255,255,0.2)',
+            background: 'transparent', color: 'rgba(255,255,255,0.5)',
+            fontSize: 10, fontWeight: 700, cursor: 'pointer',
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+          }}>Out</button>
         </div>
-        <div style={{
-          height: 3,
-          background: `linear-gradient(90deg, ${C.red} 0%, ${C.purple} 50%, ${C.lime} 100%)`
-        }} />
-      </header>
+      ) : (
+        <button onClick={() => setShowAuth(true)} style={{
+          padding: '6px 12px', borderRadius: 6,
+          border: 'none', background: C.lime, color: '#0e0416',
+          fontSize: 11, fontWeight: 900, cursor: 'pointer',
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+        }}>Login</button>
+      )}
+    </div>
+  </div>
+
+  <div style={{
+    height: 3,
+    background: `linear-gradient(90deg, ${C.red} 0%, ${C.purple} 50%, ${C.lime} 100%)`
+  }} />
+</header>
 
       {tab === 'groups' && <GroupsPage onComplete={handleGroupsComplete} />}
       {tab === 'thirdplace' && (
