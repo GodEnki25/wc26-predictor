@@ -1,9 +1,10 @@
 import { Router, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
+
 import { authMiddleware, AuthRequest } from '../middleware/auth'
+import { prisma } from '../prisma'
 
 const router = Router()
-const prisma = new PrismaClient()
+
 
 // ── SAVE PREDICTION ───────────────────────────────────────────────────────
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {

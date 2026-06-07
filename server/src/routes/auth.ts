@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { PrismaClient } from '@prisma/client'
+import { prisma} from '../prisma'
 
 const router = Router()
-const prisma = new PrismaClient()
+
 
 // ── SIGNUP ────────────────────────────────────────────────────────────────
 router.post('/signup', async (req: Request, res: Response) => {
