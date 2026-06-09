@@ -1,9 +1,47 @@
 import { Router, Request, Response } from 'express'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import dotenv from 'dotenv'
+dotenv.config()
 
 const router = Router()
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string)
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+
+// ── GROQ ──────────────────────────────────────────────────────────────────
+async function groq(prompt: string): Promise<string> {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama3-8b-8192',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 1000,
+    }),
+  })
+  const data = await res.json() as any
+  if (!res.ok) throw new Error(data.error?.message || 'Groq error')
+  return data.choices[0].message.content
+}
+
+// ── GEMINI ────────────────────────────────────────────────────────────────
+async function gemini(prompt: string): Promise<string> {
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string)
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+  const result = await model.generateContent(prompt)
+  return result.response.text()
+}
+
+// ── AI WITH FALLBACK ──────────────────────────────────────────────────────
+async function getAIResponse(prompt: string): Promise<string> {
+  try {
+    console.log('Trying Groq...')
+    return await groq(prompt)
+  } catch (err) {
+    console.warn('Groq failed, falling back to Gemini:', err)
+    return await gemini(prompt)
+  }
+}
 
 // ── ANALYZE USER PREDICTIONS ──────────────────────────────────────────────
 router.post('/analyze', async (req: Request, res: Response) => {
@@ -29,8 +67,8 @@ End with a confidence rating out of 10 for their overall bracket.
 Keep it conversational, exciting, and under 100 words.
     `
 
-    const result = await model.generateContent(prompt)
-    res.json({ analysis: result.response.text() })
+    const analysis = await getAIResponse(prompt)
+    res.json({ analysis })
   } catch (error) {
     console.error('AI analysis error:', error)
     res.status(500).json({ error: 'Failed to generate analysis' })
@@ -54,8 +92,7 @@ Return ONLY a valid JSON object with this exact structure, no markdown, no expla
 Return pure JSON only.
     `
 
-    const result = await model.generateContent(prompt)
-    const text = result.response.text().trim()
+    const text = await getAIResponse(prompt)
     const clean = text.replace(/```json|```/g, '').trim()
     res.json(JSON.parse(clean))
   } catch (error) {
