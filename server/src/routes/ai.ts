@@ -1,12 +1,9 @@
 import { Router, Request, Response } from 'express'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import dotenv from 'dotenv'
-dotenv.config()
 
 const router = Router()
 
-// ── GROQ ──────────────────────────────────────────────────────────────────
 async function groq(prompt: string): Promise<string> {
+  console.log('GROQ KEY:', process.env.GROQ_API_KEY ? `FOUND: ${process.env.GROQ_API_KEY.slice(0, 8)}...` : 'MISSING')
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -14,7 +11,7 @@ async function groq(prompt: string): Promise<string> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192',
+      model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1000,
     }),
@@ -22,25 +19,6 @@ async function groq(prompt: string): Promise<string> {
   const data = await res.json() as any
   if (!res.ok) throw new Error(data.error?.message || 'Groq error')
   return data.choices[0].message.content
-}
-
-// ── GEMINI ────────────────────────────────────────────────────────────────
-async function gemini(prompt: string): Promise<string> {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string)
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
-  const result = await model.generateContent(prompt)
-  return result.response.text()
-}
-
-// ── AI WITH FALLBACK ──────────────────────────────────────────────────────
-async function getAIResponse(prompt: string): Promise<string> {
-  try {
-    console.log('Trying Groq...')
-    return await groq(prompt)
-  } catch (err) {
-    console.warn('Groq failed, falling back to Gemini:', err)
-    return await gemini(prompt)
-  }
 }
 
 // ── ANALYZE USER PREDICTIONS ──────────────────────────────────────────────
@@ -67,7 +45,7 @@ End with a confidence rating out of 10 for their overall bracket.
 Keep it conversational, exciting, and under 100 words.
     `
 
-    const analysis = await getAIResponse(prompt)
+    const analysis = await groq(prompt)
     res.json({ analysis })
   } catch (error) {
     console.error('AI analysis error:', error)
@@ -92,7 +70,7 @@ Return ONLY a valid JSON object with this exact structure, no markdown, no expla
 Return pure JSON only.
     `
 
-    const text = await getAIResponse(prompt)
+    const text = await groq(prompt)
     const clean = text.replace(/```json|```/g, '').trim()
     res.json(JSON.parse(clean))
   } catch (error) {

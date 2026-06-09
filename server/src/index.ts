@@ -1,6 +1,8 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
 import authRouter from './routes/auth'
 import predictionsRouter from './routes/predictions'
 import aiRouter from './routes/ai'
