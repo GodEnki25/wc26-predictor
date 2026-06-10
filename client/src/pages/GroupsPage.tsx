@@ -19,11 +19,29 @@ export default function GroupsPage({ onComplete }: Props) {
   const toggleRank = (groupId: string, teamName: string) => {
     setRankings(prev => {
       const current = prev[groupId] || []
+      const group = GROUPS.find(g => g.id === groupId)!
+
+      // Deselect if already ranked
       if (current.includes(teamName)) {
         return { ...prev, [groupId]: current.filter(t => t !== teamName) }
       }
+
+      // Already full
       if (current.length >= 4) return prev
-      return { ...prev, [groupId]: [...current, teamName] }
+
+      const updated = [...current, teamName]
+
+      // Auto-fill 4th place when 3 are selected
+      if (updated.length === 3) {
+        const remaining = group.teams
+          .map(t => t.name)
+          .filter(n => !updated.includes(n))
+        if (remaining.length === 1) {
+          return { ...prev, [groupId]: [...updated, remaining[0]] }
+        }
+      }
+
+      return { ...prev, [groupId]: updated }
     })
   }
 
